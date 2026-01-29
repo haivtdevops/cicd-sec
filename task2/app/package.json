@@ -1,0 +1,15 @@
+{
+  "name": "task2-node-vuln",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Demo app for SCA + container + IaC scanning",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.3",
+    "lodash": "4.17.20"
+  }
+}
+

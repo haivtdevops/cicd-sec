@@ -1,0 +1,96 @@
+pipeline {
+    agent any
+    environment {
+        TRIVY_STRICT = 'true'
+    }
+    options { timestamps() }
+
+    stages {
+        stage('Prep') {
+            steps {
+                sh '''
+                  set -e
+                  cd /workspace/task2
+                  mkdir -p reports
+                  echo "Workspace: $(pwd)"
+                '''
+            }
+        }
+
+        stage('IaC Scan (Trivy config)') {
+            steps {
+                sh '''
+                  set +e
+                  cd /workspace
+                  mkdir -p task2/reports
+
+                  if command -v trivy > /dev/null 2>&1; then
+                    trivy config --format json --output task2/reports/iac.trivy.json task2 || true
+                    python task2/ci/evaluate_trivy.py --input task2/reports/iac.trivy.json --mode config
+                  else
+                    echo "Trivy not installed in Jenkins image - skipping IaC scan"
+                  fi
+                '''
+            }
+        }
+
+        stage('SCA (Trivy fs)') {
+            steps {
+                sh '''
+                  set +e
+                  cd /workspace
+                  mkdir -p task2/reports
+
+                  if command -v trivy > /dev/null 2>&1; then
+                    trivy fs --scanners vuln --format json --output task2/reports/sca.trivy.json task2 || true
+                    python task2/ci/evaluate_trivy.py --input task2/reports/sca.trivy.json --mode fs
+                  else
+                    echo "Trivy not installed in Jenkins image - skipping SCA scan"
+                  fi
+                '''
+            }
+        }
+
+        stage('Docker Build Image') {
+            steps {
+                sh '''
+                  set +e
+                  cd /workspace
+                  if command -v docker > /dev/null 2>&1; then
+                    docker build -t task2-node-vuln:${BUILD_NUMBER} -f task2/app/Dockerfile task2/app
+                  else
+                    echo "docker CLI not installed in Jenkins container - skipping build"
+                  fi
+                '''
+            }
+        }
+
+        stage('Image Scan (Trivy image)') {
+            steps {
+                sh '''
+                  set +e
+                  cd /workspace
+                  mkdir -p task2/reports
+
+                  if command -v trivy > /dev/null 2>&1; then
+                    if docker image inspect task2-node-vuln:${BUILD_NUMBER} > /dev/null 2>&1; then
+                      trivy image --format json --output task2/reports/image.trivy.json task2-node-vuln:${BUILD_NUMBER} || true
+                      python task2/ci/evaluate_trivy.py --input task2/reports/image.trivy.json --mode image
+                    else
+                      echo "Image task2-node-vuln:${BUILD_NUMBER} not found - skipping scan"
+                    fi
+                  else
+                    echo "Trivy not installed in Jenkins image - skipping image scan"
+                  fi
+                '''
+            }
+        }
+    }
+
+    post {
+        always {
+            archiveArtifacts artifacts: 'task2/reports/**', allowEmptyArchive: true
+        }
+    }
+}
+
