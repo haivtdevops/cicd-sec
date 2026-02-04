@@ -1,0 +1,8 @@
+rules:
+  - id: go.os.exec.command-injection
+    patterns:
+      - pattern: exec.Command("sh", "-c", $CMD)
+    message: "Use of exec.Command with shell may lead to command injection."
+    severity: ERROR
+    languages: [go]
+

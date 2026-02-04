@@ -1,0 +1,18 @@
+{
+  "version": "1.0.0",
+  "results": [
+    {
+      "check_id": "go.os.exec.command-injection",
+      "path": "app/main.go",
+      "start": { "line": 19, "col": 2, "offset": 312 },
+      "end": { "line": 19, "col": 35, "offset": 345 },
+      "extra": {
+        "message": "Use of exec.Command with shell may lead to command injection.",
+        "severity": "ERROR",
+        "metadata": { "category": "security", "subcategory": "command-injection" }
+      }
+    }
+  ],
+  "errors": [],
+  "paths": { "scanned": ["app/main.go"] }
+}
