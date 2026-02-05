@@ -1,7 +1,7 @@
 // Một pipeline duy nhất cho Task 1 + Task 2 + Task 3 (cùng ứng dụng, cùng môi trường).
 // Task 1: Build, Test, Quality (SonarQube), Security (Semgrep), Docker Build, Image Scan (Trivy)
 // Task 2: IaC Scan (Trivy config), SCA (Trivy fs), Image Scan (Trivy)
-// Task 3: Policy Enforcement (aggregate severity → block nếu vượt ngưỡng)
+// Task 3: Policy Enforcement (aggregate severity -> block neu vuot nguong)
 pipeline {
     agent any
     environment {
@@ -18,7 +18,7 @@ pipeline {
                 sh '''
                   echo "=== TASK 1: BUILD (GO) ==="
                   pip install --break-system-packages --no-cache-dir semgrep
-                  cd /workspace/app && go mod tidy && go build ./...
+                  cd /workspace/app && go mod tidy && go build -buildvcs=false ./...
                 '''
             }
         }
@@ -148,10 +148,10 @@ pipeline {
             archiveArtifacts artifacts: 'reports/**', allowEmptyArchive: true
         }
         failure {
-            echo "Pipeline FAILED – xem log stage tương ứng."
+            echo "Pipeline FAILED - xem log stage tuong ung."
         }
         success {
-            echo "Pipeline PASSED – đã chạy đủ Task 1 + Task 2 + Task 3."
+            echo "Pipeline PASSED - da chay du Task 1 + Task 2 + Task 3."
         }
     }
 }

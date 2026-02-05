@@ -1,0 +1,3 @@
+# Jenkins chạy trên Linux (Docker); file pipeline phải dùng LF để tránh lỗi parse.
+Jenkinsfile text eol=lf
+*.groovy text eol=lf

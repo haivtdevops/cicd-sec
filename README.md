@@ -31,12 +31,21 @@ Repository thực hiện **Task 1** (CI/CD + SAST), **Task 2** (SCA + IaC + Cont
 ## Khởi động
 
 ```bash
-docker compose build
+docker compose build --no-cache jenkins
 docker compose up -d jenkins sonarqube init-sonar
 ```
 
 Truy cập **Jenkins**: `http://localhost:8080`  
 Truy cập **SonarQube**: `http://localhost:9000` (sau khi init-sonar chạy xong)
+
+---
+
+## Đăng nhập (credentials mặc định)
+
+| Dịch vụ    | User   | Mật khẩu / Ghi chú |
+|------------|--------|--------------------|
+| **Jenkins** | `admin` | Lần đầu: lấy **initial admin password** trong container: `docker exec jenkins-ci cat /var/jenkins_home/secrets/initialAdminPassword` (hoặc xem trong `docker logs jenkins-ci`). Sau khi setup wizard xong, dùng tài khoản bạn tạo. |
+| **SonarQube** | `admin` | **`admin`** / **`admin`**. Lần đầu đăng nhập SonarQube sẽ yêu cầu đổi mật khẩu. |
 
 ---
 
@@ -46,6 +55,14 @@ Truy cập **SonarQube**: `http://localhost:9000` (sau khi init-sonar chạy xon
 2. **Pipeline script from SCM** → SCM: Git, URL repo (public), branch `main`.  
 3. **Script path**: **`Jenkinsfile`** (mặc định — một pipeline cho Task 1, 2, 3).  
 4. **Build Now** để chạy pipeline.
+
+**Nếu build "SUCCESS" nhưng không có stage nào chạy:**  
+1. **Executor:** **Manage Jenkins** → **Nodes** → **Built-In Node** → **Configure** → **Number of executors** = **1** trở lên → **Save**.  
+2. **Restrict where this project can be run:** Job → **Configure** → mục này **để trống** (hoặc nhập `master` nếu node của bạn có label đó).  
+3. **Label node:** **Manage Jenkins** → **Nodes** → **Built-In Node** → **Configure** → **Labels** phải có **`master`** (Jenkinsfile dùng `agent { label 'master' }`). Nếu node chỉ có label khác (vd. `built-in`), sửa trong Jenkinsfile thành `agent { label 'built-in' }` hoặc `agent any`.  
+4. **Custom workspace (tùy chọn):** Job → **Configure** → **Advanced** → **Use custom workspace** = **`/workspace`** để pipeline dùng đúng thư mục mount từ docker-compose.
+
+**Lỗi khác:** Line ending: Jenkinsfile cần LF (repo có `.gitattributes`). Script path: `Jenkinsfile`, branch đúng (vd. `main`).
 
 ---
 
